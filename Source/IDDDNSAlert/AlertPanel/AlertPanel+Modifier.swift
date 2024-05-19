@@ -14,28 +14,28 @@ import IDDSwiftUI
  The way to do backgrounds on macOS
  https://stackoverflow.com/questions/67304592/how-to-reliably-retrieve-a-windows-background-color-on-macos-with-swiftui
  */
-struct EffectView: NSViewRepresentable {
+public struct EffectView: NSViewRepresentable {
     @State var material: NSVisualEffectView.Material = .headerView
     @State var blendingMode: NSVisualEffectView.BlendingMode = .withinWindow
 
-    func makeNSView(context: Context) -> NSVisualEffectView {
+    public func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
         view.material = material
         view.blendingMode = blendingMode
         return view
     }
 
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+    public func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
         nsView.material = material
         nsView.blendingMode = blendingMode
     }
 }
 
 extension String {
-    static let doNotAskAgain = "00000000-F00B-F00B-F00B-000000000000"
+    internal static let doNotAskAgain = "00000000-F00B-F00B-F00B-000000000000"
 }
 
-extension ButtonState where Action: Equatable {
+public extension ButtonState where Action: Equatable {
     static func doNotAskAgain(
         action: ButtonStateAction<Action> = .send(nil),
         label: () -> TextState = { TextState("Do not ask again") }
@@ -85,13 +85,13 @@ extension ButtonState where Action: Equatable {
     }
 }
 
-struct AlertPanelView<Action>: View where Action: Equatable {
+public struct AlertPanelView<Action>: View where Action: Equatable {
     let store: Store<AlertState<Action>, Action>
     @Binding var isPresent: Bool
     @State var monitorID: Any?
     let alertState: AlertState<Action>
 
-    init(
+    public init(
         store: Store<AlertState<Action>, Action>,
         isPresent: Binding<Bool>
     ) {
@@ -118,7 +118,7 @@ struct AlertPanelView<Action>: View where Action: Equatable {
         }
     }
 
-    var body: some View {
+    public var body: some View {
         AlertPanel(
             Text.init(alertState.title),
             message: (alertState.message).map(Text.init) ?? Text(verbatim: "")
@@ -189,28 +189,27 @@ struct AlertPanelView<Action>: View where Action: Equatable {
     }
 }
 
-extension View {
-    /**
-     Allows us to display our very own AlertPanel.
-     This panel can than for example incorporate a don't ask me again button.
-     More of a sheet but that's the only way to punch a custom modal i know.
-     */
-    @ViewBuilder
-    public func alertPanel<Action>(
-        _ item: Binding<Store<AlertState<Action>, Action>?>
-    ) -> some View where Action: Equatable {
-        let store = item.wrappedValue
-        let isPresent = item.isPresent()
-
-        self.sheet(isPresented: isPresent) {
-            if let store {
-                // we should have a store here :-)
-                AlertPanelView(store: store, isPresent: isPresent)
-            }
-        }
-    }
-
-}
+//extension View {
+//    /**
+//     Allows us to display our very own AlertPanel.
+//     This panel can than for example incorporate a don't ask me again button.
+//     More of a sheet but that's the only way to punch a custom modal i know.
+//     */
+//    @ViewBuilder
+//    public func alertPanel<Action>(
+//        _ item: Binding<Store<AlertState<Action>, Action>?>
+//    ) -> some View where Action: Equatable {
+//        let store = item.wrappedValue
+//        let isPresent = item.isPresent()
+//
+//        self.sheet(isPresented: isPresent) {
+//            if let store {
+//                // we should have a store here :-)
+//                AlertPanelView(store: store, isPresent: isPresent)
+//            }
+//        }
+//    }
+//}
 
 /**
 post: https://stackoverflow.com/questions/68204982/how-to-detect-key-press-and-release-in-swiftui-macos/78078444#78078444

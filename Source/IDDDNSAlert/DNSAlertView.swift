@@ -10,7 +10,7 @@ import SwiftUI
 import ComposableArchitecture
 import IDDSwiftUI
 
-struct DNSAlertView<AlertAction: Equatable>: View {
+public struct DNSAlertView<AlertAction: Equatable>: View {
     @Perception.Bindable var store: StoreOf<DNSAlert<AlertAction>>
     @State private var monitorID: Any?
     let alertState: AlertState<AlertAction>
@@ -42,7 +42,7 @@ struct DNSAlertView<AlertAction: Equatable>: View {
         }
     }
     
-    var body: some View {
+    public var body: some View {
         WithPerceptionTracking {
             AlertPanel(
                 Text(store.alertState.title),
@@ -128,7 +128,7 @@ extension View {
      More of a sheet but that's the only way to punch a custom modal i know.
      */
     @ViewBuilder
-    func dnsAlert<Action>(
+    public func dnsAlert<Action>(
         _ item: Binding<Store<DNSAlert<Action>.State, DNSAlert<Action>.Action>?>
     ) -> some View where Action: Equatable {
         let store = item.wrappedValue
@@ -140,7 +140,6 @@ extension View {
             }
         }
     }
-    
 }
 
 #Preview {

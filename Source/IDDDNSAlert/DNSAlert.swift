@@ -11,14 +11,14 @@ import ComposableArchitecture
 import IDDSwiftUI
 
 @Reducer
-struct DNSAlert<AlertAction: Equatable> {
+public struct DNSAlert<AlertAction: Equatable> {
     @ObservableState
-    struct State: Equatable {
+    public struct State: Equatable {
         /**
          The default value is one week in seconds, but you can tweak it by
          passing an argument -DNSAlert.timeToLive 60
         */
-        private static var timeToLive: Int {
+        public static var timeToLive: Int {
             let value = UserDefaults.standard.integer(forKey: "DNSAlert.timeToLive")
             if value <= 0 {
                 return 30 * 24 * 60 * 60 // one month in seconds
@@ -59,7 +59,7 @@ struct DNSAlert<AlertAction: Equatable> {
          Failable initializer because alert may have persisted to not show again.
          lue which should be false.
          */
-        init?(
+        public init?(
             title: () -> TextState,
             message: (() -> TextState)? = nil,
             @ButtonStateBuilder<AlertAction> actions: () -> [ButtonState<AlertAction>] = { [] },
@@ -81,7 +81,7 @@ struct DNSAlert<AlertAction: Equatable> {
             }
         }
         
-        init(
+        public init(
             title: () -> TextState,
             message: (() -> TextState)? = nil,
             @ButtonStateBuilder<AlertAction> actions: () -> [ButtonState<AlertAction>] = { [] }
@@ -92,17 +92,20 @@ struct DNSAlert<AlertAction: Equatable> {
             self.doNotShowAgain = false
         }
     }
-    
-    @Dependency(\.dismiss) var dismiss
-    
-    enum Action: Equatable {
+
+    public enum Action: Equatable {
         case presented(AlertAction)
         case dismiss
         case setDoNotShowAgain(Bool)
         case toggleDoNotShowAgain
     }
     
-    var body: some ReducerOf<Self> {
+    public init() {
+    }
+
+    @Dependency(\.dismiss) var dismiss
+
+    public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
                 
