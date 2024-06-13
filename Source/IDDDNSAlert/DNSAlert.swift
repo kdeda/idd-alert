@@ -11,7 +11,7 @@ import ComposableArchitecture
 import IDDSwiftUI
 
 @Reducer
-public struct DNSAlert<AlertAction: Equatable> {
+public struct DNSAlert<AlertAction: Equatable> where AlertAction: Sendable {
     @ObservableState
     public struct State: Equatable {
         /**
@@ -93,7 +93,7 @@ public struct DNSAlert<AlertAction: Equatable> {
         }
     }
 
-    public enum Action: Equatable {
+    public enum Action: Equatable, Sendable {
         case presented(AlertAction)
         case dismiss
         case setDoNotShowAgain(Bool)
