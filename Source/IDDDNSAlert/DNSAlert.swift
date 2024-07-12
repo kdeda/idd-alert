@@ -56,6 +56,7 @@ public struct DNSAlert<AlertAction: Equatable> where AlertAction: Sendable {
 
         /**
          Creates the DNSAlert with the doNotShowAgain feature enabled.
+         This func will insert the ButtonState.doNotAskAgain() at the top to make the ui hack work.
          Failable initializer because alert may have persisted to not show again.
          lue which should be false.
          */
@@ -67,7 +68,17 @@ public struct DNSAlert<AlertAction: Equatable> where AlertAction: Sendable {
             timeToLive: Int = Self.timeToLive
         ) {
             let doNotShowAgainKey = "DoNotShowAgain.\(doNotShowAgainKey)"
-            self.alertState = .init(title: title, actions: actions, message: message)
+            func hackedActions() -> [ButtonState<AlertAction>] {
+                var rv = actions()
+                if let index = rv.firstIndex(where: { $0.isDoNotAskAgain == true }) {
+                    rv.remove(at: index)
+
+                }
+                rv.insert(ButtonState.doNotAskAgain(), at: 0)
+                return rv
+            }
+
+            self.alertState = .init(title: title, actions: hackedActions, message: message)
             self.askForDNS = true
             self.doNotShowAgainKey = doNotShowAgainKey
             self.doNotShowAgain = false // the didSet will not get called here

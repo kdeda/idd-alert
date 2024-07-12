@@ -36,7 +36,7 @@ extension String {
 }
 
 public extension ButtonState where Action: Equatable {
-    static func doNotAskAgain(
+    internal static func doNotAskAgain(
         action: ButtonStateAction<Action> = .send(nil),
         label: () -> TextState = { TextState("Do not ask again") }
     ) -> Self {

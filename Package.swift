@@ -16,14 +16,16 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/kdeda/idd-swiftui.git", "2.1.4" ..< "3.0.0"),
-        .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "1.10.4")
+        .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "1.11.2"),
+        .package(url: "https://github.com/pointfreeco/swiftui-navigation.git", from: "1.5.0")
     ],
     targets: [
         .target(
             name: "IDDAlert",
             dependencies: [
                 .product(name: "IDDSwiftUI", package: "idd-swiftui"),
-                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                .product(name: "SwiftUINavigation", package: "swiftui-navigation")
             ]
         ),
         .testTarget(
@@ -31,7 +33,8 @@ let package = Package(
             dependencies: [
                 "IDDAlert",
                 .product(name: "IDDSwiftUI", package: "idd-swiftui"),
-                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                .product(name: "SwiftUINavigation", package: "swiftui-navigation")
             ]
         )
     ]

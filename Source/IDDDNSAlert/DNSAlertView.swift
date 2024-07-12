@@ -8,6 +8,7 @@
 
 import SwiftUI
 import ComposableArchitecture
+import SwiftUINavigation
 import IDDSwiftUI
 
 public struct DNSAlertView<AlertAction: Equatable>: View {
@@ -133,7 +134,9 @@ extension View {
     ) -> some View where Action: Equatable {
         let store = item.wrappedValue
         let isPresent = item.isPresent()
-        
+        // let isPresent1 = Binding.init(unwrapping: item)
+        // let isPresent2 = Binding.init(item)
+
         self.sheet(isPresented: isPresent) {
             if let store {
                 DNSAlertView(store: store)
@@ -148,7 +151,6 @@ extension View {
             title: { TextState("Warning") },
             message: { TextState("Are you sure you want to delete the selected files?") },
             actions: {
-                ButtonState.doNotAskAgain()
                 ButtonState(role: .cancel) {
                     TextState("Cancel")
                 }
