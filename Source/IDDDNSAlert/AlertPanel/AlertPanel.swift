@@ -8,7 +8,12 @@
 
 import SwiftUI
 import ComposableArchitecture
-import IDDSwiftUI
+@preconcurrency import IDDSwiftUI
+
+extension Double {
+    internal static let alertPanelWidth: Double = 260
+    internal static let alertPanelPadding: Double = 16
+}
 
 /**
  Verbatim apple, Alert button style
@@ -100,8 +105,8 @@ public struct AlertPanel<Content>: View where Content: View {
                 .padding(.top, 6)
         }
         // magical numbers, february 2024
-        .padding([.all], 16)
-        .frame(width: 260)
+        .padding(Double.alertPanelPadding)
+        .frame(width: Double.alertPanelWidth)
     }
 }
 

@@ -9,9 +9,9 @@
 import SwiftUI
 import ComposableArchitecture
 import SwiftUINavigation
-import IDDSwiftUI
+@preconcurrency import IDDSwiftUI
 
-public struct DNSAlertView<AlertAction: Equatable>: View {
+public struct DNSAlertView<AlertAction>: View where AlertAction: Equatable, AlertAction: Sendable {
     @Perception.Bindable var store: StoreOf<DNSAlert<AlertAction>>
     @State private var monitorID: Any?
     let alertState: AlertState<AlertAction>
@@ -57,7 +57,11 @@ public struct DNSAlertView<AlertAction: Equatable>: View {
                                     HStack {
                                         Toggle(isOn: $store.doNotShowAgain.sending(\.setDoNotShowAgain)) {
                                             Text(buttonState.title)
+                                            // Text("Do not ask again until December 31, 2025")
+                                                .lineLimit(2)
+                                            // .frame(width: 200)
                                                 .font(.subheadline)
+                                            // .border(.yellow)
                                         }
                                         .toggleStyle(CheckboxToggleStyle())
                                         .focusable(false)
@@ -77,7 +81,7 @@ public struct DNSAlertView<AlertAction: Equatable>: View {
                                     .buttonStyle(buttonState.alertButtonStyle(store.alertState.buttons))
                                     .help(buttonState.helpString(store.alertState.buttons))
                                     .focusable(false)
-                                    
+
                                     // TODO: this works, but sometimes not !!!
                                     // Somehow when we use the NavigationSplitView these short keys do not work ...
                                     // https://stackoverflow.com/questions/68204982/how-to-detect-key-press-and-release-in-swiftui-macos/78078444#78078444
@@ -145,21 +149,44 @@ extension View {
     }
 }
 
-#Preview {
-    DNSAlertView<Never>(store: .init(
-        initialState: DNSAlert<Never>.State.init(
-            title: { TextState("Warning") },
-            message: { TextState("Are you sure you want to delete the selected files?") },
-            actions: {
-                ButtonState(role: .cancel) {
-                    TextState("Cancel")
-                }
-                ButtonState(role: .destructive) {
-                    TextState("Confirm")
-                }
-            },
-            doNotShowAgainKey: "deleteSelectedFiles12345"
-        )!,
-        reducer: DNSAlert.init
-    ))
+@MainActor
+fileprivate func store() -> StoreOf<DNSAlert<Never>>? {
+    // or else the `DNSAlert<Never>.State.init` will bomb
+    UserDefaults.standard.set(Date.distantPast, forKey: "DoNotShowAgain.deleteSelectedFiles12345")
+
+    let state = DNSAlert<Never>.State.init(
+        title: { TextState("Warning") },
+        message: { TextState("Are you sure you want to delete the selected files?") },
+        actions: {
+            ButtonState(role: .cancel) {
+                TextState("Cancel")
+            }
+            ButtonState(role: .destructive) {
+                TextState("Confirm")
+            }
+        },
+        doNotShowAgainKey: "deleteSelectedFiles12345"
+    )
+
+    if let state = state {
+        let rv = Store(
+            initialState: state,
+            reducer: DNSAlert.init
+        )
+
+        return rv
+    }
+
+    return .none
+}
+
+#Preview("DNSAlertView - Light") {
+    if let store = store() {
+        DNSAlertView<Never>(store: store)
+    } else {
+        VStack {
+            Text("Error creating the store ...")
+        }
+        .padding()
+    }
 }

@@ -8,24 +8,24 @@
 
 import SwiftUI
 import ComposableArchitecture
-import IDDSwiftUI
+@preconcurrency import IDDSwiftUI
 
 @Reducer
-public struct DNSAlert<AlertAction: Equatable> where AlertAction: Sendable {
+public struct DNSAlert<AlertAction> where AlertAction: Equatable, AlertAction: Sendable {
     @ObservableState
-    public struct State: Equatable {
+    public struct State: Equatable, Sendable {
         /**
-         The default value is one week in seconds, but you can tweak it by
+         The default value is three month in seconds, but you can tweak it by
          passing an argument -DNSAlert.timeToLive 60
-        */
+         */
         public static var timeToLive: Int {
             let value = UserDefaults.standard.integer(forKey: "DNSAlert.timeToLive")
             if value <= 0 {
-                return 30 * 24 * 60 * 60 // one month in seconds
+                return 3 * 30 * 24 * 60 * 60 // three month in seconds
             }
             return value
         }
-        
+
         var alertState: AlertState<AlertAction>
         /**
          When false we revert to the old alert.
@@ -33,7 +33,7 @@ public struct DNSAlert<AlertAction: Equatable> where AlertAction: Sendable {
          */
         let askForDNS: Bool
         var doNotShowAgainKey: String
-        
+
         var lastAskDate: Date {
             get {
                 let date = UserDefaults.standard.object(forKey: doNotShowAgainKey) as? Date
@@ -43,16 +43,39 @@ public struct DNSAlert<AlertAction: Equatable> where AlertAction: Sendable {
                 UserDefaults.standard.set(newValue, forKey: doNotShowAgainKey)
             }
         }
-        
+
         /**
-         When we show the panel we always start with false, other wise we dont evenr show this alert.
+         Return true to not show
          */
-        var doNotShowAgain: Bool {
-            didSet {
-                Log4swift[Self.self].info("doNotShowAgain: '\(doNotShowAgainKey).\(doNotShowAgain)'")
-                UserDefaults.standard.set(doNotShowAgain ? Date() : .distantPast, forKey: doNotShowAgainKey)
+        private func doNotShow(timeToLive: Int) -> Bool {
+            if Int(self.lastAskDate.elapsedTimeInSeconds) < min(timeToLive, Self.timeToLive) {
+                let lastAsked = self.lastAskDate.string(withFormat: "MMMM d, yyyy HH:mm")
+                let untilDateString = self.lastAskDate.addingTimeInterval(Double(Self.timeToLive)).string(withFormat: "MMMM d, yyyy HH:mm")
+
+                // this corresponds to self.doNotShowAgain being true
+                // in which case we just return nil
+                // upstream we than interpret this as, go do your thing, user said do not show again
+                Log4swift[Self.self].info("key: '\(doNotShowAgainKey)' until: '\(untilDateString)' was asked: '\(lastAsked)'")
+                return true
             }
+            return false
         }
+
+        /**
+         For pretty print
+         */
+        func setDoNotShow() {
+            let newDate = doNotShowAgain ? Date().addingTimeInterval(Double(Self.timeToLive)) : .distantPast
+            let untilDateString = newDate.string(withFormat: "MMMM d, yyyy HH:mm")
+
+            Log4swift[Self.self].info("key: '\(doNotShowAgainKey)' until: '\(untilDateString)'")
+            UserDefaults.standard.set(newDate, forKey: doNotShowAgainKey)
+        }
+
+        /**
+         When we show the panel we always start with false, other wise we wont even show this alert.
+         */
+        var doNotShowAgain: Bool
 
         /**
          Creates the DNSAlert with the doNotShowAgain feature enabled.
@@ -67,31 +90,29 @@ public struct DNSAlert<AlertAction: Equatable> where AlertAction: Sendable {
             doNotShowAgainKey: String,
             timeToLive: Int = Self.timeToLive
         ) {
-            let doNotShowAgainKey = "DoNotShowAgain.\(doNotShowAgainKey)"
             func hackedActions() -> [ButtonState<AlertAction>] {
                 var rv = actions()
                 if let index = rv.firstIndex(where: { $0.isDoNotAskAgain == true }) {
                     rv.remove(at: index)
 
                 }
-                rv.insert(ButtonState.doNotAskAgain(), at: 0)
+
+                let newDate = Date().addingTimeInterval(Double(Self.timeToLive))
+                let untilDateString = newDate.string(withFormat: "MMMM d, yyyy")
+                rv.insert(ButtonState.doNotAskAgain(labelString: "Do not ask again until\n\(untilDateString)"), at: 0)
                 return rv
             }
 
             self.alertState = .init(title: title, actions: hackedActions, message: message)
             self.askForDNS = true
-            self.doNotShowAgainKey = doNotShowAgainKey
+            self.doNotShowAgainKey = "DoNotShowAgain.\(doNotShowAgainKey)"
             self.doNotShowAgain = false // the didSet will not get called here
-            
-            if Int(self.lastAskDate.elapsedTimeInSeconds) < min(timeToLive, Self.timeToLive) {
-                // this corresponds to self.doNotShowAgain being true
-                // in which case we just return nil
-                // upstream we than interpret this as, go do your thing, user said do not show again
-                Log4swift[Self.self].info("alert: '\(doNotShowAgainKey)' was told to DNS.")
+
+            if doNotShow(timeToLive: timeToLive) {
                 return nil
             }
         }
-        
+
         public init(
             title: () -> TextState,
             message: (() -> TextState)? = nil,
@@ -111,10 +132,9 @@ public struct DNSAlert<AlertAction: Equatable> where AlertAction: Sendable {
         case toggleDoNotShowAgain
     }
     
+
     public init() {
     }
-
-    @Dependency(\.dismiss) var dismiss
 
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -125,16 +145,19 @@ public struct DNSAlert<AlertAction: Equatable> where AlertAction: Sendable {
                 
             case .dismiss:
                 return .run { _ in
-                    await self.dismiss()
+                    @Dependency(\.dismiss) var dismiss
+                    await dismiss()
                 }
-                
+
             case let .setDoNotShowAgain(newValue):
                 state.doNotShowAgain = newValue
+                state.setDoNotShow()
                 return .none
                 
             case .toggleDoNotShowAgain:
                 if state.askForDNS {
                     state.doNotShowAgain.toggle()
+                    state.setDoNotShow()
                 }
                 return .none
                 

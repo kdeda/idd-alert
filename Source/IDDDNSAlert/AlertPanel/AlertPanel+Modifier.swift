@@ -8,7 +8,7 @@
 
 import SwiftUI
 import ComposableArchitecture
-import IDDSwiftUI
+@preconcurrency import IDDSwiftUI
 
 /**
  The way to do backgrounds on macOS
@@ -38,10 +38,10 @@ extension String {
 public extension ButtonState where Action: Equatable {
     internal static func doNotAskAgain(
         action: ButtonStateAction<Action> = .send(nil),
-        label: () -> TextState = { TextState("Do not ask again") }
+        labelString: String = "Do not ask again"
     ) -> Self {
         ButtonState(action: action, label: {
-            TextState(String.doNotAskAgain) + label()
+            TextState(String.doNotAskAgain) + TextState(labelString)
         })
     }
 
@@ -79,6 +79,7 @@ public extension ButtonState where Action: Equatable {
         return ""
     }
 
+    @MainActor
     func alertButtonStyle(_ others: [ButtonState<Action>]) -> AlertPanelButtonStyle {
         let knowRoles = others.filter({ !$0.isDoNotAskAgain })
         return AlertPanelButtonStyle(primary: knowRoles.first == self)
