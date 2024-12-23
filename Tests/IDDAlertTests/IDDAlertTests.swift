@@ -8,8 +8,8 @@ final class v: XCTestCase {
         // results.
 //        XCTAssertEqual(IDDCommons().text, "Hello, World!")
     }
-
-    static var allTests = [
-        ("testExample", testExample),
-    ]
+//
+//    static var allTests = [
+//        ("testExample", testExample),
+//    ]
 }
