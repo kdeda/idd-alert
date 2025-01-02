@@ -3,7 +3,7 @@
 //  IDDAlert
 //
 //  Created by Jesse Deda on 3/3/24.
-//  Copyright (C) 1997-2024 id-design, inc. All rights reserved.
+//  Copyright (C) 1997-2025 id-design, inc. All rights reserved.
 //
 
 import SwiftUI
@@ -26,51 +26,25 @@ public struct DNSAlert<AlertAction> where AlertAction: Equatable, AlertAction: S
             return value
         }
 
+        /**
+         Helper to allow access from outside
+         */
+        public static func setDoNotShow(_ newValue: Bool, _ doNotShowAgainKey: String) {
+            var lastAskDate: LastAskDate = .init(propertyName: doNotShowAgainKey)
+            lastAskDate.date = newValue ? Date().addingTimeInterval(Double(Self.timeToLive)) : .distantPast
+        }
+
         var alertState: AlertState<AlertAction>
         /**
          When false we revert to the old alert.
          There is no DNS bull shait.
          */
         let askForDNS: Bool
-        var doNotShowAgainKey: String
-
-        var lastAskDate: Date {
-            get {
-                let date = UserDefaults.standard.object(forKey: doNotShowAgainKey) as? Date
-                return date ?? .distantPast
-            }
-            set {
-                UserDefaults.standard.set(newValue, forKey: doNotShowAgainKey)
-            }
+        var doNotShowAgainKey: String {
+            lastAskDate.propertyName
         }
-
-        /**
-         Return true to not show
-         */
-        private func doNotShow(timeToLive: Int) -> Bool {
-            if Int(self.lastAskDate.elapsedTimeInSeconds) < min(timeToLive, Self.timeToLive) {
-                let lastAsked = self.lastAskDate.string(withFormat: "MMMM d, yyyy HH:mm")
-                let untilDateString = self.lastAskDate.addingTimeInterval(Double(Self.timeToLive)).string(withFormat: "MMMM d, yyyy HH:mm")
-
-                // this corresponds to self.doNotShowAgain being true
-                // in which case we just return nil
-                // upstream we than interpret this as, go do your thing, user said do not show again
-                Log4swift[Self.self].info("key: '\(doNotShowAgainKey)' until: '\(untilDateString)' was asked: '\(lastAsked)'")
-                return true
-            }
-            return false
-        }
-
-        /**
-         For pretty print
-         */
-        func setDoNotShow() {
-            let newDate = doNotShowAgain ? Date().addingTimeInterval(Double(Self.timeToLive)) : .distantPast
-            let untilDateString = newDate.string(withFormat: "MMMM d, yyyy HH:mm")
-
-            Log4swift[Self.self].info("key: '\(doNotShowAgainKey)' until: '\(untilDateString)'")
-            UserDefaults.standard.set(newDate, forKey: doNotShowAgainKey)
-        }
+        var lastAskDate: LastAskDate
+        var timeToLive: Int
 
         /**
          When we show the panel we always start with false, other wise we wont even show this alert.
@@ -105,10 +79,21 @@ public struct DNSAlert<AlertAction> where AlertAction: Equatable, AlertAction: S
 
             self.alertState = .init(title: title, actions: hackedActions, message: message)
             self.askForDNS = true
-            self.doNotShowAgainKey = "DoNotShowAgain.\(doNotShowAgainKey)"
-            self.doNotShowAgain = false // the didSet will not get called here
+            self.lastAskDate = .init(propertyName: doNotShowAgainKey)
+            self.doNotShowAgain = false
+            self.timeToLive = timeToLive
 
-            if doNotShow(timeToLive: timeToLive) {
+            let flags = MainActor.assumeIsolated {
+                NSApp.currentEvent?.modifierFlags ?? NSEvent.ModifierFlags(rawValue: 0)
+            }
+            if flags.contains([.option]) {
+                // option click
+                // ignore dns
+                Log4swift[Self.self].info("key: '\(lastAskDate.propertyName)' option+click detected ...")
+                self.lastAskDate.date = .distantPast
+            }
+
+            if self.lastAskDate.doNotShow {
                 return nil
             }
         }
@@ -120,8 +105,9 @@ public struct DNSAlert<AlertAction> where AlertAction: Equatable, AlertAction: S
         ) {
             self.alertState = .init(title: title, actions: actions, message: message)
             self.askForDNS = false
-            self.doNotShowAgainKey = ""
+            self.lastAskDate = .init(propertyName: "")
             self.doNotShowAgain = false
+            self.timeToLive = Self.timeToLive
         }
     }
 
@@ -151,13 +137,13 @@ public struct DNSAlert<AlertAction> where AlertAction: Equatable, AlertAction: S
 
             case let .setDoNotShowAgain(newValue):
                 state.doNotShowAgain = newValue
-                state.setDoNotShow()
+                state.lastAskDate.date = state.doNotShowAgain ?  Date().addingTimeInterval(Double(state.timeToLive)) : .distantPast
                 return .none
                 
             case .toggleDoNotShowAgain:
                 if state.askForDNS {
                     state.doNotShowAgain.toggle()
-                    state.setDoNotShow()
+                    state.lastAskDate.date = state.doNotShowAgain ?  Date().addingTimeInterval(Double(state.timeToLive)) : .distantPast
                 }
                 return .none
                 
