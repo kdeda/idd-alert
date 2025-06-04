@@ -2,5 +2,4 @@
 
 @_exported import Log4swift
 @_exported import IDDSwift
-@_exported import IDDSwiftUI
 @_exported import ComposableArchitecture

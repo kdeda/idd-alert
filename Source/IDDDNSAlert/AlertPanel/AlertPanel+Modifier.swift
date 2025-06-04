@@ -7,8 +7,8 @@
 //
 
 import SwiftUI
+import Carbon
 import ComposableArchitecture
-@preconcurrency import IDDSwiftUI
 
 /**
  The way to do backgrounds on macOS
@@ -161,20 +161,20 @@ public struct AlertPanelView<Action>: View where Action: Equatable {
             }
             .onAppear(perform: {
                 self.monitorID = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                    if event.keyCode == .returnKey || event.keyCode == .enter {
+                    if event.keyCode == kVK_Return || event.keyCode == kVK_ANSI_KeypadEnter {
                         Log4swift[Self.self].info(function: "NSEvent.addLocalMonitorForEvents", "[returnKey || enter]")
 
                         let buttons = alertState.buttons.filter({ !$0.isDoNotAskAgain })
                         if let button = buttons.first {
                             handleAction(button)
-                            return nil
+                            return .none
                         }
-                    } else if event.keyCode == .space {
+                    } else if event.keyCode == kVK_Space {
                         Log4swift[Self.self].info(function: "NSEvent.addLocalMonitorForEvents", "[space]")
 
                         if let button = alertState.buttons.first(where: { $0.isDoNotAskAgain }) {
                             handleAction(button)
-                            return nil
+                            return .none
                         }
                     }
                     return event
@@ -245,12 +245,12 @@ struct Demo {
             }
             .onAppear(perform: {
                 self.monitorID = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                    if event.keyCode == .returnKey || event.keyCode == .enter {
+                    if event.keyCode == kVK_Return || event.keyCode == kVK_ANSI_KeypadEnter {
                         handleAction(".return")
-                        return nil
-                    } else if event.keyCode == .space {
+                        return .none
+                    } else if event.keyCode == kVK_Space {
                         handleAction(".space")
-                        return nil
+                        return .none
                     }
                     // allow others to handle this event
                     return event

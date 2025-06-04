@@ -8,7 +8,6 @@
 
 import SwiftUI
 import ComposableArchitecture
-@preconcurrency import IDDSwiftUI
 
 @Reducer
 public struct DNSAlert<AlertAction> where AlertAction: Equatable, AlertAction: Sendable {

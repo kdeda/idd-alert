@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import IDDSwift
 import Log4swift
 
 internal struct LastAskDate: Equatable {
@@ -46,7 +47,6 @@ internal struct LastAskDate: Equatable {
      */
     var doNotShow: Bool {
         let date = self.date
-        let elapsedTimeInSeconds1 = Int(Date.distantPast.elapsedTimeInSeconds)
         let elapsedTimeInSeconds = Int(date.elapsedTimeInSeconds)
         let rv = elapsedTimeInSeconds <= 0
 

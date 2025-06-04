@@ -8,7 +8,6 @@
 
 import SwiftUI
 import ComposableArchitecture
-@preconcurrency import IDDSwiftUI
 
 extension Double {
     internal static let alertPanelWidth: Double = 260
@@ -149,7 +148,7 @@ struct AlertPanel_Previews: PreviewProvider {
                 .buttonStyle(AlertPanelButtonStyle(primary: true))
             }
         }
-        .background(Color.windowBackgroundColor)
+        // .background(Color.windowBackgroundColor)
         .environment(\.colorScheme, .light)
         
         // 3 button alert panel
@@ -177,7 +176,7 @@ struct AlertPanel_Previews: PreviewProvider {
             }
             .frame(width: .infinity)
         }
-        .background(Color.windowBackgroundColor)
+        // .background(Color.windowBackgroundColor)
         .environment(\.colorScheme, .dark)
     }
 }

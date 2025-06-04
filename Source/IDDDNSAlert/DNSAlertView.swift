@@ -7,9 +7,9 @@
 //
 
 import SwiftUI
+import Carbon
 import ComposableArchitecture
 import SwiftUINavigation
-@preconcurrency import IDDSwiftUI
 
 public struct DNSAlertView<AlertAction>: View where AlertAction: Equatable, AlertAction: Sendable {
     @Perception.Bindable var store: StoreOf<DNSAlert<AlertAction>>
@@ -95,21 +95,21 @@ public struct DNSAlertView<AlertAction>: View where AlertAction: Equatable, Aler
                 .onAppear(perform: {
                     // TODO: Maybe move this into the init?
                     self.monitorID = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                        if event.keyCode == .returnKey || event.keyCode == .enter {
+                        if event.keyCode == kVK_Return || event.keyCode == kVK_ANSI_KeypadEnter {
                             Log4swift[Self.self].info(function: "NSEvent.addLocalMonitorForEvents", "[returnKey || enter]")
                             
                             let buttons = alertState.buttons.filter({ !$0.isDoNotAskAgain })
                             if let button = buttons.first {
                                 handleAction(button)
-                                return nil
+                                return .none
                             }
-                        } else if event.keyCode == .space {
+                        } else if event.keyCode == kVK_Space {
                             Log4swift[Self.self].info(function: "NSEvent.addLocalMonitorForEvents", "[space]")
                             
                             if let _ = alertState.buttons.first(where: { $0.isDoNotAskAgain }) {
                                 store.send(.toggleDoNotShowAgain)
                                 // handleAction(button)
-                                return nil
+                                return .none
                             }
                         }
                         return event
