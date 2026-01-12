@@ -3,7 +3,7 @@
 //  IDDAlert
 //
 //  Created by Klajd Deda on 02/24/24.
-//  Copyright (C) 1997-2025 id-design, inc. All rights reserved.
+//  Copyright (C) 1997-2026 id-design, inc. All rights reserved.
 //
 
 import SwiftUI
@@ -66,7 +66,7 @@ public struct AlertPanel<Content>: View where Content: View {
     
     public var body: some View {
         VStack(alignment: .center, spacing: 10) {
-            Image(nsImage: NSImage(named: "AppIcon") ?? NSImage())
+            Image(nsImage: NSImage(named: "AppIconOriginal") ?? NSImage())
                 .resizable()
                 .frame(width: 64, height: 64)
                 .padding(.top, 5)

@@ -15,7 +15,7 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/kdeda/idd-swift.git", "2.5.9" ..< "3.0.0"),
+        .package(url: "https://github.com/kdeda/idd-swift.git", "2.6.6" ..< "3.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "1.23.1"),
         .package(url: "https://github.com/pointfreeco/swift-navigation.git", from: "2.6.0")
     ],

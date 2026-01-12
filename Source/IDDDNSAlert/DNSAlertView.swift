@@ -3,7 +3,7 @@
 //  IDDAlert
 //
 //  Created by Jesse Deda on 3/3/24.
-//  Copyright (C) 1997-2025 id-design, inc. All rights reserved.
+//  Copyright (C) 1997-2026 id-design, inc. All rights reserved.
 //
 
 import SwiftUI
@@ -137,8 +137,13 @@ extension View {
         _ item: Binding<Store<DNSAlert<Action>.State, DNSAlert<Action>.Action>?>
     ) -> some View where Action: Equatable {
         let store = item.wrappedValue
-        let isPresent = item.isPresent()
-        // let isPresent1 = Binding.init(unwrapping: item)
+        // let isPresent = item.isPresent()
+        let isPresent = Binding.init(
+            get: { store != .none },
+            set: { newValue in
+                Log4swift[Self.self].info("newValue: '\(newValue)'")
+            }
+        )
         // let isPresent2 = Binding.init(item)
 
         self.sheet(isPresented: isPresent) {
